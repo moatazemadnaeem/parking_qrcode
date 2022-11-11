@@ -4,6 +4,7 @@ const cors=require('cors')
 const cookieSession =require('cookie-session') 
 require('express-async-errors')
 const fileUpload = require('express-fileupload');
+const getCurrentBranchName = require('node-git-current-branch');
 
 const mongoose =require('mongoose') 
 //Auth
@@ -67,8 +68,8 @@ const start=async()=>{
         throw new BadReqErr('Jwt is not defined')
     }
     try{
-        await mongoose.connect(app.settings.env==='development'?process.env.DB_URL_DEV:process.env.DB_URL_PROD)
-        console.log(`connected to ${app.settings.env} db`)
+        await mongoose.connect(getCurrentBranchName!=='main'?process.env.DB_URL_DEV:process.env.DB_URL_PROD)
+        console.log(`connected to ${getCurrentBranchName!=='main'?'dev':'prod'} db`)
     }catch (err){
         console.log(err,'err to connect')
     }

@@ -22,6 +22,7 @@
     "express-validator": "^6.14.0",
     "jsonwebtoken": "^8.5.1",
     "mongoose": "^6.2.1",
+    "node-git-current-branch": "^2.0.1",
     "nodemailer": "^6.7.8"
   },
   "devDependencies": {

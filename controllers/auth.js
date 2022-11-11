@@ -7,6 +7,8 @@ const {hashPass,comparePass}=require('../utils/password')
 const jwt =require('jsonwebtoken')
 const {SendEmail}=require('../utils/sendEmail')
 const {GetRandString}=require('../utils/randomString')
+const getCurrentBranchName = require('node-git-current-branch');
+
 module.exports={
     signup:async(req,res)=>{
         const error =validationResult(req)
@@ -35,7 +37,7 @@ module.exports={
         for(let i=0;i<img.length;i++){
             let item=img[i]
             let rand=GetRandString()
-            User.imgPath.push(`https://qrcodeparking.herokuapp.com/static/${app.settings.env==='development'?'Dev':'Prod'}/${rand+item.name}`)
+            User.imgPath.push(`https://qrcodeparking.herokuapp.com/static/${getCurrentBranchName()!=='main'?'Dev':'Prod'}/${rand+item.name}`)
             await User.save()
             item.mv(`./images/${rand+item.name}`)
         }
