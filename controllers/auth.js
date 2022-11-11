@@ -7,7 +7,7 @@ const {hashPass,comparePass}=require('../utils/password')
 const jwt =require('jsonwebtoken')
 const {SendEmail}=require('../utils/sendEmail')
 const {GetRandString}=require('../utils/randomString')
-const getCurrentBranchName = require('node-git-current-branch');
+const getCurrentBranchName = require('../utils/getBranchName');
 
 module.exports={
     signup:async(req,res)=>{

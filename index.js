@@ -4,7 +4,7 @@ const cors=require('cors')
 const cookieSession =require('cookie-session') 
 require('express-async-errors')
 const fileUpload = require('express-fileupload');
-const getCurrentBranchName = require('node-git-current-branch');
+const getCurrentBranchName = require('./utils/getBranchName');
 
 const mongoose =require('mongoose') 
 //Auth
