@@ -69,6 +69,7 @@ const start=async()=>{
     }
     try{
         await mongoose.connect(getCurrentBranchName!=='main'?process.env.DB_URL_DEV:process.env.DB_URL_PROD)
+        console.log(`branch name is ${getCurrentBranchName}`)
         console.log(`connected to ${getCurrentBranchName!=='main'?'dev':'prod'} db`)
     }catch (err){
         console.log(err,'err to connect')
