@@ -35,7 +35,7 @@ module.exports={
         for(let i=0;i<img.length;i++){
             let item=img[i]
             let rand=GetRandString()
-            User.imgPath.push(`https://farza-e-commerce.herokuapp.com/static/${app.settings.env==='development'?'Dev':'Prod'}/${rand+item.name}`)
+            User.imgPath.push(`https://qrcodeparking.herokuapp.com/static/${app.settings.env==='development'?'Dev':'Prod'}/${rand+item.name}`)
             await User.save()
             item.mv(`./images/${rand+item.name}`)
         }

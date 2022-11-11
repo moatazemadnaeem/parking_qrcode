@@ -6,12 +6,12 @@ const SendEmailNotification=(email,msg)=>{
         const Transport=nodemailer.createTransport({
             service:'gmail',
             auth:{
-                user:'seifashrafdarwish1@gmail.com',
+                user:'MoatazWork0@gmail.com',
                 pass:process.env.NODEMAILERPASS
             },
         })
         const mailOptions={
-            from:'seifashrafdarwish1@gmail.com',
+            from:'MoatazWork0@gmail.com',
             to:email,
             subject:'Please Check This Notification ASAP, Somebody Needs Something From You.',
             text:msg
