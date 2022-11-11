@@ -4,7 +4,6 @@ const cors=require('cors')
 const cookieSession =require('cookie-session') 
 require('express-async-errors')
 const fileUpload = require('express-fileupload');
-const getCurrentBranchName = require('./utils/getBranchName');
 
 const mongoose =require('mongoose') 
 //Auth
@@ -68,9 +67,8 @@ const start=async()=>{
         throw new BadReqErr('Jwt is not defined')
     }
     try{
-        await mongoose.connect(getCurrentBranchName()!=='main'?process.env.DB_URL_DEV:process.env.DB_URL_PROD)
-        console.log(`branch name is ${getCurrentBranchName()}`)
-        console.log(`connected to ${getCurrentBranchName()!=='main'?'dev':'prod'} db`)
+        await mongoose.connect(process.env.STATE==='DEV'?process.env.DB_URL_DEV:process.env.DB_URL_PROD)
+        console.log(`connected to ${process.env.STATE==='DEV'?'dev':'prod'} db`)
     }catch (err){
         console.log(err,'err to connect')
     }
