@@ -68,8 +68,8 @@ const start=async()=>{
         throw new BadReqErr('Jwt is not defined')
     }
     try{
-        await mongoose.connect(getCurrentBranchName!=='main'?process.env.DB_URL_DEV:process.env.DB_URL_PROD)
-        console.log(`connected to ${getCurrentBranchName!=='main'?'dev':'prod'} db`)
+        await mongoose.connect(getCurrentBranchName()!=='main'?process.env.DB_URL_DEV:process.env.DB_URL_PROD)
+        console.log(`connected to ${getCurrentBranchName()!=='main'?'dev':'prod'} db`)
     }catch (err){
         console.log(err,'err to connect')
     }
