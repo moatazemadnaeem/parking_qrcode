@@ -10,9 +10,9 @@ module.exports={
         if(!email||!msg){
             throw new BadReqErr('Please Provide the right creds')
         }
-
+        let User;
         try{
-            const User=await user.findOne({email})
+            User=await user.findOne({email})
             if(!User){
                 throw new notfound('Can not find this email please try again.')
             }
@@ -22,6 +22,8 @@ module.exports={
 
         try{
            await SendEmailNotification(email,msg)
+           User.notifications.push({msg})
+           await User.save()
         }catch(err){
             InternalServerErr('Sorry something went wrong on our server please try again another time Thanks.')
         }
