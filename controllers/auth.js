@@ -52,14 +52,8 @@ module.exports={
             await User.save()
             item.mv(`./images/${rand+item.name}`)
         }
-          const token= jwt.sign({
-              id:User._id,
-          },process.env.JWT_KEY)
-          req.session={
-              jwt:token
-          }
           SendEmail(User.email,User.otp)
-          return res.status(201).send({name:User.name,email:User.email,id:User._id,role:User.role,status:true,token})
+          return res.status(201).send({name:User.name,email:User.email,id:User._id,role:User.role,status:true})
        } 
     },
     signin:async(req,res)=>{
