@@ -17,6 +17,12 @@ const {send_otp}=require('./routes/send-otp')
 const {reset_pass}=require('./routes/reset-pass')
 //Notifications
 const {send_notification}=require('./routes/notification/PushNotification')
+//Parking
+const {createParking}=require('./routes/parking/create_parking')
+const {createSection}=require('./routes/parking/create_section')
+const {addCars}=require('./routes/parking/add_cars')
+const {removeCars}=require('./routes/parking/remove_cars')
+const {getNearestParkings}=require('./routes/parking/getNearestParkings')
 
 const { handelerr } =require('./middlewares/handelError') 
 const {notfound}=require('./errorclasses/notfound')
@@ -57,6 +63,17 @@ app.use('/api/users',reset_pass)
 
 //Notification
 app.use('/api/notifications',send_notification)
+
+//Parking
+
+app.use('/api/parking',createParking)
+app.use('/api/parking',createSection)
+app.use('/api/parking',addCars)
+app.use('/api/parking',removeCars)
+app.use('/api/parking',getNearestParkings)
+
+//Catch all
+
 app.all('*',()=>{
     throw new notfound('can not find this page please try again')
 })

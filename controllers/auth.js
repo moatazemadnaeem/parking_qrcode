@@ -2,11 +2,13 @@ const {validationResult} =require('express-validator')
 const {validateincomingreq}=require('../errorclasses/incomingReq')
 const {BadReqErr}=require('../errorclasses/badReq')
 const {notfound}=require('../errorclasses/notfound')
+const {NotAuth}=require('../errorclasses/notauth')
 const {user}=require('../models/BaseModel')
 const {hashPass,comparePass}=require('../utils/password')
 const jwt =require('jsonwebtoken')
 const {SendEmail}=require('../utils/sendEmail')
 const {GetRandString}=require('../utils/randomString')
+const { Roles } = require('../utils/roles')
 
 module.exports={
     signup:async(req,res)=>{
@@ -15,7 +17,16 @@ module.exports={
         if(!error.isEmpty()){
             throw new validateincomingreq(error.array())
         }
-        const {name,email,password}=req.body;
+        const {name,email,password,role}=req.body;
+        if(role===Roles.ADMIN){
+            throw new NotAuth('You Are Not allowed to do that.')
+        }
+        if(!role){
+            throw new NotAuth('You should provide a role')
+        }
+        if(!Roles[role]){
+            throw new NotAuth('You provided a bad role')
+        }
         console.log(email)
        const exists=await user.findOne({email})
        if(exists){
@@ -32,11 +43,12 @@ module.exports={
             }
         }
           const otp=GetRandString();
-          const User= await user.create({name,email,otp,password:hashPass(password)})
+         
+          const User=await user.create({name,email,otp,password:hashPass(password),role})
         for(let i=0;i<img.length;i++){
             let item=img[i]
             let rand=GetRandString()
-            User.imgPath.push(`https://qrcodeparking.herokuapp.com/static/${process.env.STATE==='DEV'?'Dev':'Prod'}/${rand+item.name}`)
+            User.imgPath.push(`http:render.com/static/${process.env.STATE==='DEV'?'Dev':'Prod'}/${rand+item.name}`)
             await User.save()
             item.mv(`./images/${rand+item.name}`)
         }
@@ -47,7 +59,7 @@ module.exports={
               jwt:token
           }
           SendEmail(User.email,User.otp)
-          return res.status(201).send({name:User.name,email:User.email,id:User._id,status:true,token})
+          return res.status(201).send({name:User.name,email:User.email,id:User._id,role:User.role,status:true,token})
        } 
     },
     signin:async(req,res)=>{
@@ -85,7 +97,8 @@ module.exports={
         email:existingUser.email,
         status:true,
         id:existingUser._id,
-        token
+        token,
+        role:existingUser.role
     })
     },
     signout:async(req,res)=>{
