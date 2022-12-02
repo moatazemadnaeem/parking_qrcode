@@ -75,7 +75,7 @@ module.exports={
             for(let i=0;i<img.length;i++){
                 let item=img[i]
                 let rand=GetRandString()
-                Parking.img.push(`one_render/static/${process.env.STATE==='DEV'?'Dev':'Prod'}/${rand+item.name}`)
+                Parking.img.push(`https://parking-167s.onrender.com/static/${process.env.STATE==='DEV'?'Dev':'Prod'}/${rand+item.name}`)
                 await Parking.save()
                 item.mv(`./images/${rand+item.name}`)
             }
