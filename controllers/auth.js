@@ -9,7 +9,8 @@ const jwt =require('jsonwebtoken')
 const {SendEmail}=require('../utils/sendEmail')
 const {GetRandString}=require('../utils/randomString')
 const { Roles } = require('../utils/roles')
-
+const {bufferToDataURI}=require('../utils/turnBuffertoDataURI')
+const {uploadToCloudinary}=require('../utils/uploadImage')
 module.exports={
     signup:async(req,res)=>{
         const error =validationResult(req)
@@ -37,16 +38,21 @@ module.exports={
           const otp=GetRandString();
          
           const User=await user.create({name,email,otp,password:hashPass(password)})
-        for(let i=0;i<img.length;i++){
+          for(let i=0;i<img.length;i++){
             let item=img[i]
-            let rand=GetRandString()
-            User.imgPath.push(`https://parking-167s.onrender.com/static/${process.env.STATE==='DEV'?'Dev':'Prod'}/${rand+item.name}`)
+            const fileFormat = item.mimetype.split('/')[1]
+            const { base64 } = bufferToDataURI(fileFormat, item.data)
+            const imageDetails = await uploadToCloudinary(base64, fileFormat)
+            console.log(imageDetails)
+            User.imgPath.push(imageDetails.url)
             await User.save()
-            item.mv(`./images/${rand+item.name}`)
         }
-          SendEmail(User.email,User.otp)
-          return res.status(201).send({name:User.name,email:User.email,images:User.imgPath,id:User._id,status:true})
-       } 
+        SendEmail(User.email,User.otp)
+        let L=User.imgPath.length-1;
+        if(L<0){
+            return res.status(201).send({name:User.name,email:User.email,status:true,images:User.imgPath,lastImg:'there is no last image',id:User._id})
+        }
+        return res.status(201).send({name:User.name,email:User.email,status:true,images:product.imgPath,lastImg:product.imgPath[L],id:User._id})} 
     },
     signin:async(req,res)=>{
         

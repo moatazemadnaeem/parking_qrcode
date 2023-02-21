@@ -7,6 +7,8 @@ const {distance}=require('../utils/getDistanceTwoPoints')
 const {car}=require('../models/CarsModel')
 const {user}=require('../models/BaseModel')
 const {nearestModel}=require('../models/NearestModel')
+const {bufferToDataURI}=require('../utils/turnBuffertoDataURI')
+const {uploadToCloudinary}=require('../utils/uploadImage')
 module.exports={
     create_parking:async(req,res)=>{
         
@@ -71,14 +73,16 @@ module.exports={
                 capacity:floorCapacity,
                 parkingId:Parking._id
             })
-
             for(let i=0;i<img.length;i++){
                 let item=img[i]
-                let rand=GetRandString()
-                Parking.img.push(`https://parking-167s.onrender.com/static/${process.env.STATE==='DEV'?'Dev':'Prod'}/${rand+item.name}`)
+                const fileFormat = item.mimetype.split('/')[1]
+                const { base64 } = bufferToDataURI(fileFormat, item.data)
+                const imageDetails = await uploadToCloudinary(base64, fileFormat)
+                console.log(imageDetails)
+                Parking.images.push(imageDetails.url)
                 await Parking.save()
-                item.mv(`./images/${rand+item.name}`)
             }
+           
             
             return res.status(201).send({msg:'Parking Created Successfully',Parking,status:true})
         }catch(err){

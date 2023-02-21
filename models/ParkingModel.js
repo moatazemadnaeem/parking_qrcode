@@ -5,7 +5,7 @@ const Parking=mongoose.Schema({
     type:String,
     required:true
   },
-  img:{
+  images:{
     type:[String]
   },
   desc:{
