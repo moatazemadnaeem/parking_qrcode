@@ -33,10 +33,9 @@ const BaseSchema=mongoose.Schema({
     history:{
         type:[Number]
     },
-    role:{
-        type: String,
-        enum:Object.values(Roles),
-        default:Roles.DRIVER
+    IsAdmin:{
+        type:Boolean,
+        default:false
     }
 },
 { timestamps: true })

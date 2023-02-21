@@ -17,16 +17,8 @@ module.exports={
         if(!error.isEmpty()){
             throw new validateincomingreq(error.array())
         }
-        const {name,email,password,role}=req.body;
-        if(role===Roles.ADMIN){
-            throw new NotAuth('You Are Not allowed to do that.')
-        }
-        if(!role){
-            throw new NotAuth('You should provide a role')
-        }
-        if(!Roles[role]){
-            throw new NotAuth('You provided a bad role')
-        }
+        const {name,email,password}=req.body;
+      
         console.log(email)
        const exists=await user.findOne({email})
        if(exists){
@@ -44,7 +36,7 @@ module.exports={
         }
           const otp=GetRandString();
          
-          const User=await user.create({name,email,otp,password:hashPass(password),role})
+          const User=await user.create({name,email,otp,password:hashPass(password)})
         for(let i=0;i<img.length;i++){
             let item=img[i]
             let rand=GetRandString()
@@ -53,7 +45,7 @@ module.exports={
             item.mv(`./images/${rand+item.name}`)
         }
           SendEmail(User.email,User.otp)
-          return res.status(201).send({name:User.name,email:User.email,id:User._id,role:User.role,status:true})
+          return res.status(201).send({name:User.name,email:User.email,id:User._id,status:true})
        } 
     },
     signin:async(req,res)=>{
