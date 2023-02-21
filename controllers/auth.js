@@ -45,7 +45,7 @@ module.exports={
             item.mv(`./images/${rand+item.name}`)
         }
           SendEmail(User.email,User.otp)
-          return res.status(201).send({name:User.name,email:User.email,id:User._id,status:true})
+          return res.status(201).send({name:User.name,email:User.email,images:User.imgPath,id:User._id,status:true})
        } 
     },
     signin:async(req,res)=>{
