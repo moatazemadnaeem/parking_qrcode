@@ -36,7 +36,6 @@ module.exports={
             }
         }
           const otp=GetRandString();
-         
           const User=await user.create({name,email,otp,password:hashPass(password)})
           for(let i=0;i<img.length;i++){
             let item=img[i]
@@ -45,6 +44,7 @@ module.exports={
             const imageDetails = await uploadToCloudinary(base64, fileFormat)
             console.log(imageDetails)
             User.imgPath.push(imageDetails.url)
+            console.log(User)
             await User.save()
         }
         SendEmail(User.email,User.otp)
@@ -52,7 +52,7 @@ module.exports={
         if(L<0){
             return res.status(201).send({name:User.name,email:User.email,status:true,images:User.imgPath,lastImg:'there is no last image',id:User._id})
         }
-        return res.status(201).send({name:User.name,email:User.email,status:true,images:product.imgPath,lastImg:product.imgPath[L],id:User._id})} 
+        return res.status(201).send({name:User.name,email:User.email,status:true,images:User.imgPath,lastImg:User.imgPath[L],id:User._id})} 
     },
     signin:async(req,res)=>{
         
