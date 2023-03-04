@@ -15,6 +15,8 @@ const {verfiyUserRoute}=require('./routes/verfiy-user')
 const {forgot_pass}=require('./routes/forgotPass')
 const {send_otp}=require('./routes/send-otp')
 const {reset_pass}=require('./routes/reset-pass')
+const {resend_otp}=require('./routes/resendOtp')
+const {resend_otp_reset}=require('./routes/resendOtpReset')
 //Notifications
 const {send_notification}=require('./routes/notification/PushNotification')
 //Parking
@@ -60,7 +62,8 @@ app.use('/api/users',verfiyUserRoute)
 app.use('/api/users',forgot_pass)
 app.use('/api/users',send_otp)
 app.use('/api/users',reset_pass)
-
+app.use('/api/users',resend_otp)
+app.use('/api/users',resend_otp_reset)
 //Notification
 app.use('/api/notifications',send_notification)
 

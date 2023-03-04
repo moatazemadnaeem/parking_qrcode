@@ -13,13 +13,7 @@ const {bufferToDataURI}=require('../utils/turnBuffertoDataURI')
 const {uploadToCloudinary}=require('../utils/uploadImage')
 module.exports={
     signup:async(req,res)=>{
-        const error =validationResult(req)
-        console.log('error:',error.array())
-        if(!error.isEmpty()){
-            throw new validateincomingreq(error.array())
-        }
         const {name,email,password}=req.body;
-      
         console.log(email)
        const exists=await user.findOne({email})
        if(exists){
@@ -105,12 +99,12 @@ module.exports={
         if(req.currentUser){
           try{
             const {name,email,_id}= await user.findById(req.currentUser.id)
-            return res.send({currentUser:{
+            return res.send({
                 name,
                 email,
                 id:_id,
                 status:true
-            }})
+            })
           }catch(err){
             throw new notfound('this user can not be found')
           }
@@ -176,5 +170,41 @@ module.exports={
         existingUser.set({password:hashPass(newpass)})
         await existingUser.save()
         return res.status(200).send({msg:'Now you can use your new password',status:true})
-    }
+    },
+     resendOtp:async(req,res)=>{
+        const {email}=req.body;
+        try{
+            const exists=await user.findOne({email})
+            if(!exists){
+               throw new BadReqErr('Email Not found')
+            }
+            const uniqueString=GetRandString()
+            exists.uniqueString=uniqueString;
+            await exists.save()
+           
+            SendEmail(exists.email,exists.uniqueString);
+    
+            return res.status(200).send({msg:'Otp sent Successfully.'})
+           }catch(err){
+            throw new BadReqErr(err.message)
+           }
+    },
+    resendOtpReset:async(req,res)=>{
+        const {email}=req.body;
+        try{
+            const exists=await user.findOne({email})
+            if(!exists){
+               throw new BadReqErr('Email Not found')
+            }
+            const uniqueString=GetRandString()
+            exists.uniqueResetPassStr=uniqueString;
+            await exists.save()
+           
+            SendEmail(exists.email,exists.uniqueResetPassStr,true);
+    
+            return res.status(200).send({msg:'Otp sent Successfully.'})
+           }catch(err){
+            throw new BadReqErr(err.message)
+           }
+    },
 }

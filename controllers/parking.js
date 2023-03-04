@@ -11,31 +11,7 @@ const {bufferToDataURI}=require('../utils/turnBuffertoDataURI')
 const {uploadToCloudinary}=require('../utils/uploadImage')
 module.exports={
     create_parking:async(req,res)=>{
-        
-        const {name,desc,fullCapacity,location,floorCapacity,nearest}=req.body;
-        
-        if(!name||!desc||!fullCapacity||!location||!location.lon||!location.lat||!floorCapacity||!nearest||nearest.length===0){
-            throw new BadReqErr('Please provide the right data.')
-        }
-        
-        //[  {   place:['hospital','bank'] , distanceToCenter , gate   }  , {   place:['hospital','bank'] , distanceToCenter , gate   }  ]
-        
-        for(let i=0;i<nearest.length;i++){
-            const item=nearest[i];
-            if(!item.distanceToCenter||!item.gate||typeof item.distanceToCenter!=='number'||typeof item.gate!=='number'){
-                throw new BadReqErr('Please provide the right data for nearest')
-            }
-        }
-
-        const sortedNearest=nearest.sort((a,b)=>a.gate - b.gate)
-        let sum=0
-        sortedNearest.forEach((item)=>{
-            sum+=item.gate;
-        })
-        if(sum!==((nearest.length/2)*(sortedNearest[0].gate+sortedNearest[sortedNearest.length-1].gate))){
-            throw new BadReqErr('Please provide the right data for nearest.')
-        }
-
+        const {name,desc,fullCapacity,location,floorCapacity,sortedNearest}=req.body;
         try{
             let img=[];
             if(req.files){
@@ -61,11 +37,11 @@ module.exports={
             })
             for(let i=0;i<sortedNearest.length;i++){
                 const data=sortedNearest[i];
-                    await nearestModel.create({
-                        ...data,
-                        place:data.place?data.place:[],
-                        parkingId:Parking._id
-                    })
+                await nearestModel.create({
+                    ...data,
+                    place:data.place?data.place:[],
+                    parkingId:Parking._id
+                })
             }
             
             await section.create({
@@ -91,10 +67,6 @@ module.exports={
     },
     create_section:async(req,res)=>{
         const {capacity,sectionChar,id}=req.body;
-        if(!id||!capacity||!sectionChar){
-            throw new BadReqErr('Please provide the right creds.')
-        }
-
         try{
             const p=await parking.findById(id)
             if(capacity>p.fullCapacity){
@@ -128,10 +100,6 @@ module.exports={
     add_cars:async(req,res)=>{
         //id is stands for the parking id that we are trying to enter
         const {carId,location,id,enterGate}=req.body;
-        if(!carId||!location||!location.lon||!location.lat||carId!==req.currentUser.id||!enterGate||typeof enterGate!=='number'){
-            throw new BadReqErr('Please provide the right creds.')
-        }
-
         try{
             const Parking=await parking.findById(id)
             const distanceGate=Parking.nearest.filter((item)=>item.gate===enterGate)
@@ -142,7 +110,7 @@ module.exports={
             const foundCar=await car.findOne({carId,parkingId:id})
             console.log(d,DGate)
             if(d>DGate){
-                throw new BadReqErr('Car is so far from the parking')
+                throw new BadReqErr('Car is far from the parking')
             }
             if(foundCar){
                 throw new BadReqErr('You already in the parking')
@@ -157,7 +125,7 @@ module.exports={
                     throw new BadReqErr('This Parking Is FullFill')
                 }
                 const pos = taken.map(e => e.sectionChar).indexOf(aval[0].sectionChar);//a
-                const c=Parking.takenSections[pos].capacity
+                const c=Parking.takenSections[pos].capacity//get the object thats holds a and get the capacity
                 Parking.takenSections[pos]={...Parking.takenSections[pos],capacity:c-1}
                 console.log(c, Parking.takenSections[pos])
                 await Parking.save()
@@ -217,9 +185,6 @@ module.exports={
     remove_cars:async(req,res)=>{
         //id is stands for the parking id that we are trying to enter
         const {carId,location,id,outGate}=req.body;
-        if(!carId||!location||!location.lon||!location.lat||carId!==req.currentUser.id||!outGate||typeof outGate !=='number'){
-            throw new BadReqErr('Please provide the right creds.')
-        }
         try{
             const p=await parking.findById(id)
             const ParkingLoc=p.location;
