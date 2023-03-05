@@ -19,6 +19,8 @@ const {resend_otp}=require('./routes/resendOtp')
 const {resend_otp_reset}=require('./routes/resendOtpReset')
 //Notifications
 const {send_notification}=require('./routes/notification/PushNotification')
+const {get_chats}=require('./routes/notification/GetChannels')
+const {get_chats_user}=require('./routes/notification/GetChatByUser')
 //Parking
 const {createParking}=require('./routes/parking/create_parking')
 const {createSection}=require('./routes/parking/create_section')
@@ -66,6 +68,8 @@ app.use('/api/users',resend_otp)
 app.use('/api/users',resend_otp_reset)
 //Notification
 app.use('/api/notifications',send_notification)
+app.use('/api/notifications',get_chats)
+app.use('/api/notifications',get_chats_user)
 
 //Parking
 
