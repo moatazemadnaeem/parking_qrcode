@@ -1,7 +1,7 @@
 const express=require('express')
 const {current}=require('../controllers/auth')
-const {ExtractPayload}=require('../middlewares/extractPayload')
+const {Auth}=require('../middlewares/auth')
 const router=express.Router()
 
-router.get('/current-user',ExtractPayload,current)
+router.get('/current-user',Auth,current)
 module.exports={current:router}

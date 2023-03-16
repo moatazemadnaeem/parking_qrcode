@@ -2,19 +2,17 @@ const {validationResult} =require('express-validator')
 const {validateincomingreq}=require('../errorclasses/incomingReq')
 const {BadReqErr}=require('../errorclasses/badReq')
 const {notfound}=require('../errorclasses/notfound')
+const {NotAuth}=require('../errorclasses/notauth')
 const {user}=require('../models/BaseModel')
 const {hashPass,comparePass}=require('../utils/password')
 const jwt =require('jsonwebtoken')
 const {SendEmail}=require('../utils/sendEmail')
 const {GetRandString}=require('../utils/randomString')
-
+const { Roles } = require('../utils/roles')
+const {bufferToDataURI}=require('../utils/turnBuffertoDataURI')
+const {uploadToCloudinary}=require('../utils/uploadImage')
 module.exports={
     signup:async(req,res)=>{
-        const error =validationResult(req)
-        console.log('error:',error.array())
-        if(!error.isEmpty()){
-            throw new validateincomingreq(error.array())
-        }
         const {name,email,password}=req.body;
         console.log(email)
        const exists=await user.findOne({email})
@@ -32,23 +30,23 @@ module.exports={
             }
         }
           const otp=GetRandString();
-          const User= await user.create({name,email,otp,password:hashPass(password)})
-        for(let i=0;i<img.length;i++){
+          const User=await user.create({name,email,otp,password:hashPass(password)})
+          for(let i=0;i<img.length;i++){
             let item=img[i]
-            let rand=GetRandString()
-            User.imgPath.push(`https://qrcodeparking.herokuapp.com/static/${process.env.STATE==='DEV'?'Dev':'Prod'}/${rand+item.name}`)
+            const fileFormat = item.mimetype.split('/')[1]
+            const { base64 } = bufferToDataURI(fileFormat, item.data)
+            const imageDetails = await uploadToCloudinary(base64, fileFormat)
+            console.log(imageDetails)
+            User.imgPath.push(imageDetails.url)
+            console.log(User)
             await User.save()
-            item.mv(`./images/${rand+item.name}`)
         }
-          const token= jwt.sign({
-              id:User._id,
-          },process.env.JWT_KEY)
-          req.session={
-              jwt:token
-          }
-          SendEmail(User.email,User.otp)
-          return res.status(201).send({name:User.name,email:User.email,id:User._id,status:true,token})
-       } 
+        SendEmail(User.email,User.otp)
+        let L=User.imgPath.length-1;
+        if(L<0){
+            return res.status(201).send({name:User.name,email:User.email,status:true,images:User.imgPath,lastImg:'there is no last image',id:User._id})
+        }
+        return res.status(201).send({name:User.name,email:User.email,status:true,images:User.imgPath,lastImg:User.imgPath[L],id:User._id})} 
     },
     signin:async(req,res)=>{
         
@@ -85,7 +83,8 @@ module.exports={
         email:existingUser.email,
         status:true,
         id:existingUser._id,
-        token
+        token,
+        role:existingUser.role
     })
     },
     signout:async(req,res)=>{
@@ -100,12 +99,12 @@ module.exports={
         if(req.currentUser){
           try{
             const {name,email,_id}= await user.findById(req.currentUser.id)
-            return res.send({currentUser:{
+            return res.send({
                 name,
                 email,
                 id:_id,
                 status:true
-            }})
+            })
           }catch(err){
             throw new notfound('this user can not be found')
           }
@@ -171,5 +170,41 @@ module.exports={
         existingUser.set({password:hashPass(newpass)})
         await existingUser.save()
         return res.status(200).send({msg:'Now you can use your new password',status:true})
-    }
+    },
+     resendOtp:async(req,res)=>{
+        const {email}=req.body;
+        try{
+            const exists=await user.findOne({email})
+            if(!exists){
+               throw new BadReqErr('Email Not found')
+            }
+            const uniqueString=GetRandString()
+            exists.uniqueString=uniqueString;
+            await exists.save()
+           
+            SendEmail(exists.email,exists.uniqueString);
+    
+            return res.status(200).send({msg:'Otp sent Successfully.'})
+           }catch(err){
+            throw new BadReqErr(err.message)
+           }
+    },
+    resendOtpReset:async(req,res)=>{
+        const {email}=req.body;
+        try{
+            const exists=await user.findOne({email})
+            if(!exists){
+               throw new BadReqErr('Email Not found')
+            }
+            const uniqueString=GetRandString()
+            exists.uniqueResetPassStr=uniqueString;
+            await exists.save()
+           
+            SendEmail(exists.email,exists.uniqueResetPassStr,true);
+    
+            return res.status(200).send({msg:'Otp sent Successfully.'})
+           }catch(err){
+            throw new BadReqErr(err.message)
+           }
+    },
 }

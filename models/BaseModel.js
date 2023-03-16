@@ -1,5 +1,6 @@
 const mongoose=require('mongoose')
-const {Notification}=require('./NotificationModel')
+const {Notification}=require('./NotificationUtil')
+// const {Roles}=require('../utils/roles')
 const BaseSchema=mongoose.Schema({
     name:{
         type:String,
@@ -28,6 +29,13 @@ const BaseSchema=mongoose.Schema({
     },
     imgPath:{
         type:[String],
+    },
+    history:{
+        type:[Number]
+    },
+    IsAdmin:{
+        type:Boolean,
+        default:false
     }
 },
 { timestamps: true })
