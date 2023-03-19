@@ -207,4 +207,56 @@ module.exports={
             throw new BadReqErr(err.message)
            }
     },
+    editProfileImg:async(req,res)=>{
+        const id=req.currentUser.id;
+        if(!id){
+            throw new BadReqErr('there is no user id')
+        }
+        try{
+            const User= await user.findById(id)
+            if(!User){
+                throw new notfound('not found the User')
+            }
+            let img=[];
+            if(req.files){
+                if(req.files.img.length===undefined){
+                    img=[req.files.img];
+                }else{
+                    img=[...req.files.img];
+                }
+            }
+            for(let i=0;i<img.length;i++){
+                let item=img[i]
+                const fileFormat = item.mimetype.split('/')[1]
+                const { base64 } = bufferToDataURI(fileFormat, item.data)
+                const imageDetails = await uploadToCloudinary(base64, fileFormat)
+                console.log(imageDetails)
+                User.imgPath.push(imageDetails.url)
+                await User.save()
+             }
+             return res.status(200).send({status:true,images:User.imgPath})
+        }catch(err){
+            throw new BadReqErr(err.message)
+        }
+    },
+    update_user:async(req,res)=>{
+        if(req.currentUser){
+            const {name,password}=req.body
+          
+            try{
+               const User= await user.findById(req.currentUser.id)
+               User.name=name?name:User.name;
+               User.password=password?hashPass(password):User.password;
+             
+               await User.save()
+               
+               return res.status(200).send({name:User.name,email:User.email,status:true})
+            }catch(err){
+               throw new notfound('this user can not be found')
+            }
+        }else{
+            return res.send({currentUser:null})
+        }
+       
+    },
 }
