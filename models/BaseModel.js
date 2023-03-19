@@ -19,7 +19,7 @@ const BaseSchema=mongoose.Schema({
     },
     IsValid:{
         type:Boolean,
-        default:false,
+        default:true,
     },
     uniqueResetPassStr:{
         type:String,
