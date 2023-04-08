@@ -1,7 +1,7 @@
 const {parking}=require('../models/ParkingModel')
 const {BadReqErr}=require('../errorclasses/badReq')
 const {GetRandString}=require('../utils/randomString')
-const {InternalServerErr}=require('../errorclasses/InternalServer')
+// const {InternalServerErr}=require('../errorclasses/InternalServer')
 const {section}=require('../models/SectionsModel')
 const {distance}=require('../utils/getDistanceTwoPoints')
 const {car}=require('../models/CarsModel')
@@ -62,7 +62,7 @@ module.exports={
             
             return res.status(201).send({msg:'Parking Created Successfully',Parking,status:true})
         }catch(err){
-            throw new InternalServerErr(err.message)
+            throw new BadReqErr(err.message)
         }
     },
     create_section:async(req,res)=>{
@@ -93,7 +93,7 @@ module.exports={
             return res.status(201).send({msg:'Section Created Successfully',Section,status:true})
 
         }catch(err){
-            throw new InternalServerErr(err.message)
+            throw new BadReqErr(err.message)
         }
         
     },
@@ -179,7 +179,7 @@ module.exports={
             }
 
         }catch(err){
-            throw new InternalServerErr(err.message)
+            throw new BadReqErr(err.message)
         }
     },
     remove_cars:async(req,res)=>{
@@ -218,7 +218,7 @@ module.exports={
             return res.status(200).send({msg:'Car Is removed Successfully from the parking',Car,status:true})
 
         }catch(err){
-            throw new InternalServerErr(err.message)
+            throw new BadReqErr(err.message)
         }
     },
     get_nearest_parkings:async(req,res)=>{
@@ -246,7 +246,34 @@ module.exports={
                 return res.status(200).send({msg:'Fetched Nearest Parkings Successfully',NearestParkings,status:true})
             }
         catch(err){
-            throw new InternalServerErr(err.message)
+            throw new BadReqErr(err.message)
+        }
+    },
+    rate_parkings:async(req,res)=>{
+        const { stars , parkingId } = req.body;
+        try{
+            const p=await parking.findById(parkingId)
+            if(!p){
+                throw new BadReqErr('can not find this parking')
+            }
+            // Check if user already rated
+            const alreadyRated = p.ratings.rateByUser.find(r => r.userId.toString() === req.currentUser.id);
+            if (alreadyRated) {
+               const newRatings= p.ratings.rateByUser.filter(r => r.userId.toString() !== req.currentUser.id)
+               newRatings.push({ userId: req.currentUser.id, stars })
+               p.ratings.rateByUser=newRatings;
+            }else{
+               p.ratings.rateByUser.push({ userId: req.currentUser.id, stars })
+            }
+            const c= p.ratings.rateByUser.length;
+            p.ratings.count=c;
+            const s=p.ratings.rateByUser.map(r => r.stars)
+            const avg=s.reduce((a, b) => a + b, 0)
+            p.ratings.avgRating= avg / c;
+            await p.save();
+            return res.status(200).send({ status: true ,msg:'Rate is done successfully'});
+        }catch(err){
+            throw new BadReqErr(err.message)
         }
     }
     

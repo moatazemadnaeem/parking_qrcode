@@ -29,7 +29,7 @@ const {createSection}=require('./routes/parking/create_section')
 const {addCars}=require('./routes/parking/add_cars')
 const {removeCars}=require('./routes/parking/remove_cars')
 const {getNearestParkings}=require('./routes/parking/getNearestParkings')
-
+const {rateParking}=require('./routes/parking/rateParking')
 const { handelerr } =require('./middlewares/handelError') 
 const {notfound}=require('./errorclasses/notfound')
 const {BadReqErr}=require('./errorclasses/badReq')
@@ -82,6 +82,7 @@ app.use('/api/parking',createSection)
 app.use('/api/parking',addCars)
 app.use('/api/parking',removeCars)
 app.use('/api/parking',getNearestParkings)
+app.use('/api/parking',rateParking)
 
 //Catch all
 
