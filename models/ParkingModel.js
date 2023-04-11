@@ -1,6 +1,11 @@
 const mongoose=require('mongoose')
 const {Location}=require('./LocationUtil')
 const Parking=mongoose.Schema({
+  userId:{
+    type: mongoose.Schema.Types.ObjectId, 
+    ref: 'User',
+    required:true
+  },
   name:{
     type:String,
     required:true
@@ -34,6 +39,9 @@ const Parking=mongoose.Schema({
   fullCapacity:{
     type:Number,
     required:true
+  },
+  availableCapacity:{
+    type:Number,
   },
   loc: {
     type:Object,

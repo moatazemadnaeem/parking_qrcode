@@ -8,6 +8,7 @@ const {validatereq}=require('../../middlewares/validateReq')
 
 router.post('/create-parking',Auth,
 [
+    body('userId').isMongoId().withMessage('userId must be a valid MongoDB ObjectId'),
     body('name').isLength({min:1,max:255}).withMessage('name must be at least 1 chars long and 255 max'),
     body('desc').isLength({min:1,max:10000}).withMessage('desc must be at least 1 chars long and 10000 max'),
     body('fullCapacity').isInt().withMessage('please provide valid fullCapacity'),

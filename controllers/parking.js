@@ -11,7 +11,7 @@ const {bufferToDataURI}=require('../utils/turnBuffertoDataURI')
 const {uploadToCloudinary}=require('../utils/uploadImage')
 module.exports={
     create_parking:async(req,res)=>{
-        const {name,desc,fullCapacity,location,floorCapacity,sortedNearest}=req.body;
+        const {name,desc,fullCapacity,location,floorCapacity,sortedNearest,userId}=req.body;
         try{
             let img=[];
             if(req.files){
@@ -33,7 +33,9 @@ module.exports={
                 location,
                 takenSections:[{sectionChar:'a',capacity:floorCapacity}],
                 loc,
-                nearest:sortedNearest
+                nearest:sortedNearest,
+                userId,
+                availableCapacity:fullCapacity
             })
             for(let i=0;i<sortedNearest.length;i++){
                 const data=sortedNearest[i];
@@ -128,6 +130,7 @@ module.exports={
                 const c=Parking.takenSections[pos].capacity//get the object thats holds a and get the capacity
                 Parking.takenSections[pos]={...Parking.takenSections[pos],capacity:c-1}
                 console.log(c, Parking.takenSections[pos])
+                Parking.availableCapacity=Parking.availableCapacity - 1;
                 await Parking.save()
                 const Section=await section.findOne({sectionChar:aval[0].sectionChar,parkingId:Parking._id})
                 Section.capacity=c-1;
@@ -157,6 +160,7 @@ module.exports={
                 }
                 Parking.takenSections[0]={...Parking.takenSections[0],capacity:taken[0].capacity - 1}
                 console.log(Parking.takenSections[0])
+                Parking.availableCapacity=Parking.availableCapacity - 1;
                 await Parking.save();
                 const Section=await section.findOne({sectionChar:Parking.takenSections[0].sectionChar,parkingId:Parking._id})
                 Section.capacity = Section.capacity - 1;
@@ -207,6 +211,7 @@ module.exports={
             const pos =  p.takenSections.map(e => e.sectionChar).indexOf(s);
             p.takenSections[pos]={...p.takenSections[pos],capacity:p.takenSections[pos].capacity+1}
             Section.capacity=Section.capacity + 1;
+            p.availableCapacity=p.availableCapacity + 1;
             await p.save()
             await Section.save()
 
@@ -221,30 +226,36 @@ module.exports={
             throw new BadReqErr(err.message)
         }
     },
-    get_nearest_parkings:async(req,res)=>{
-        const {location} =req.body;
-        if(!location||!location.lat||!location.lon){
-            throw new BadReqErr('Please provide the right creds.')
-        }
+    get_parkings:async(req,res)=>{
+        const {location,stars,userId,availableCapacity} =req.body;
         try{
-            const NearestParkings=await parking.find(
-                {
-                   "loc": {
-                     $near: {
-                       $geometry: {
-                          type: "Point" ,
-                          coordinates: [ location.lon , location.lat ]
-                       },
-                     }
-                   }
+            let query={}
+            if(location){
+                query['loc']={
+                    $near: {
+                        $geometry: {
+                          type: 'Point',
+                          coordinates: [location.lon, location.lat],
+                        },
+                    },
                 }
-                )
-                if(!NearestParkings||NearestParkings.length===0){
-                    throw new BadReqErr('There are no parkings')
-                }
-
-                return res.status(200).send({msg:'Fetched Nearest Parkings Successfully',NearestParkings,status:true})
             }
+            if (stars) {
+                query['ratings.avgRating'] = { $exists: true, $gte: stars };
+            }
+            if (userId) {
+                query['userId'] = { $eq: userId };
+            }
+            if (availableCapacity) {
+                query['availableCapacity'] = { $gte: availableCapacity };
+            }
+            const Parkings=await parking.find(query).select('-__v -createdAt -updatedAt -loc');
+            if(!Parkings){
+                throw new BadReqErr('There are no parkings')
+            }
+
+            return res.status(200).send({msg:'Fetched Parkings Successfully',Parkings,status:true})
+        }
         catch(err){
             throw new BadReqErr(err.message)
         }
