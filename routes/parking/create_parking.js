@@ -10,7 +10,7 @@ router.post('/create-parking',Auth,
 [
     body('userId').isMongoId().withMessage('userId must be a valid MongoDB ObjectId'),
     body('name').isLength({min:1,max:255}).withMessage('name must be at least 1 chars long and 255 max'),
-    body('desc').isLength({min:1,max:10000}).withMessage('desc must be at least 1 chars long and 10000 max'),
+    body('desc').isLength({min:1}).withMessage('desc must be at least 1 chars long and 10000 max'),
     body('fullCapacity').isInt().withMessage('please provide valid fullCapacity'),
     body('location').isObject().withMessage('please provide valid location object').custom((value) => {
         if (!value.lon || !value.lat) {
@@ -28,13 +28,19 @@ router.post('/create-parking',Auth,
             }
         }
         const sortedNearest=value.sort((a,b)=>a.gate - b.gate)
-        let sum=0
-        sortedNearest.forEach((item)=>{
-            sum+=item.gate;
-        })
-        if(sum!==((value.length/2)*(sortedNearest[0].gate+sortedNearest[sortedNearest.length-1].gate))){
-            return Promise.reject('Gates should start from one to the end');
+        let count=1
+        for(let i=0;i<sortedNearest.length;i++){
+            const item=sortedNearest[i]
+            if(count!==item.gate){
+                return Promise.reject('Gates should start in order manner');
+            }
+            count++;
         }
+       
+        // console.log(sum,((value.length/2)*(sortedNearest[0].gate+sortedNearest[sortedNearest.length-1].gate)))
+        // if(sum!==((value.length/2)*(sortedNearest[0].gate+sortedNearest[sortedNearest.length-1].gate))){
+        //     return Promise.reject('Gates should start from one to the end');
+        // }
         req.body.sortedNearest=sortedNearest;
         return Promise.resolve();
     }),
