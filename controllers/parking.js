@@ -106,6 +106,9 @@ module.exports={
         const {carId,location,id,enterGate}=req.body;
         try{
             const Parking=await parking.findById(id)
+            if(Parking.availableCapacity===0){
+                throw new BadReqErr('Parking is full fill')
+            }
             const distanceGate=Parking.nearest.filter((item)=>item.gate===enterGate)
             const DGate=distanceGate[0].distanceToCenter;//100 M
             const ParkingLoc=Parking.location;
