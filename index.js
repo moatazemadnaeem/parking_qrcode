@@ -30,6 +30,9 @@ const {addCars}=require('./routes/parking/add_cars')
 const {removeCars}=require('./routes/parking/remove_cars')
 const {getParkings}=require('./routes/parking/getParkings')
 const {rateParking}=require('./routes/parking/rateParking')
+const {getParkingVideo}=require('./routes/parking/getParkingVideo')
+
+
 const { handelerr } =require('./middlewares/handelError') 
 const {notfound}=require('./errorclasses/notfound')
 const {BadReqErr}=require('./errorclasses/badReq')
@@ -86,6 +89,7 @@ app.use('/api/parking',addCars)
 app.use('/api/parking',removeCars)
 app.use('/api/parking',getParkings)
 app.use('/api/parking',rateParking)
+app.use('/api/parking',getParkingVideo)
 
 //Catch all
 

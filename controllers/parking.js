@@ -8,7 +8,9 @@ const {car}=require('../models/CarsModel')
 const {user}=require('../models/BaseModel')
 const {nearestModel}=require('../models/NearestModel')
 const {bufferToDataURI}=require('../utils/turnBuffertoDataURI')
-const {uploadToCloudinary}=require('../utils/uploadImage')
+const {uploadVideosToCloudinary}=require('../utils/uploadImage')
+const axios = require('axios');
+
 module.exports={
     create_parking:async(req,res)=>{
         const {name,desc,fullCapacity,location,floorCapacity,sortedNearest,userId}=req.body;
@@ -283,6 +285,14 @@ module.exports={
             p.ratings.avgRating= avg / c;
             await p.save();
             return res.status(200).send({ status: true ,msg:'Rate is done successfully'});
+        }catch(err){
+            throw new BadReqErr(err.message)
+        }
+    },
+    getParkingVideo:async(req,res)=>{
+        try{   
+            const video = 'https://res.cloudinary.com/dgn4qwa6m/video/upload/v1686941571/ai_g7gnql.mp4';
+            res.status(200).send({msg:'done sending video',video,status:true})
         }catch(err){
             throw new BadReqErr(err.message)
         }
