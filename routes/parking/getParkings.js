@@ -5,7 +5,7 @@ const {Auth}=require('../../middlewares/auth')
 const {get_parkings}=require('../../controllers/parking')
 const {body}=require('express-validator')
 const {validatereq}=require('../../middlewares/validateReq')
-router.post('/get-parkings',Auth,
+router.get('/get-parkings',Auth,
 [
     body('location').optional().isObject().withMessage('please provide valid location object').custom((value) => {
         if (!value.lon || !value.lat) {
