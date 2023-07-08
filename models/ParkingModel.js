@@ -1,6 +1,11 @@
 const mongoose=require('mongoose')
 const {Location}=require('./LocationUtil')
 const Parking=mongoose.Schema({
+  userId:{
+    type: mongoose.Schema.Types.ObjectId, 
+    ref: 'User',
+    required:true
+  },
   name:{
     type:String,
     required:true
@@ -11,9 +16,6 @@ const Parking=mongoose.Schema({
   desc:{
     type:String,
     required:true
-  },
-  rate:{
-    type:Number
   },
   availableSections:{
     type:[String],
@@ -38,10 +40,28 @@ const Parking=mongoose.Schema({
     type:Number,
     required:true
   },
+  availableCapacity:{
+    type:Number,
+  },
   loc: {
     type:Object,
     required:true
+  },
+  ratings:{
+    rateByUser:[{
+      userId: { type: mongoose.Schema.Types.ObjectId, ref: 'User' },
+      stars: { type: Number, required: true, min: 1, max: 5 }
+    }],
+    avgRating:{
+      type:Number,
+      default:0
+    },
+    count:{
+      type:Number,
+      default:0
+    }
   }
+ 
 },
 { timestamps: true })
 Parking.index( { "loc" : "2dsphere" } )

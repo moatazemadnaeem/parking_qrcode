@@ -28,7 +28,10 @@ const {createParking}=require('./routes/parking/create_parking')
 const {createSection}=require('./routes/parking/create_section')
 const {addCars}=require('./routes/parking/add_cars')
 const {removeCars}=require('./routes/parking/remove_cars')
-const {getNearestParkings}=require('./routes/parking/getNearestParkings')
+const {getParkings}=require('./routes/parking/getParkings')
+const {rateParking}=require('./routes/parking/rateParking')
+const {getParkingVideo}=require('./routes/parking/getParkingVideo')
+
 
 const { handelerr } =require('./middlewares/handelError') 
 const {notfound}=require('./errorclasses/notfound')
@@ -58,6 +61,7 @@ app.use(
 )
 
 //Auth
+
 app.use('/api/users',signup)
 app.use('/api/users',signin)
 app.use('/api/users',signout)
@@ -70,7 +74,9 @@ app.use('/api/users',resend_otp)
 app.use('/api/users',resend_otp_reset)
 app.use('/api/users',add_profile_pic)
 app.use('/api/users',updateUser)
+
 //Notification
+
 app.use('/api/notifications',send_notification)
 app.use('/api/notifications',get_chats)
 app.use('/api/notifications',get_chats_user)
@@ -81,7 +87,9 @@ app.use('/api/parking',createParking)
 app.use('/api/parking',createSection)
 app.use('/api/parking',addCars)
 app.use('/api/parking',removeCars)
-app.use('/api/parking',getNearestParkings)
+app.use('/api/parking',getParkings)
+app.use('/api/parking',rateParking)
+app.use('/api/parking',getParkingVideo)
 
 //Catch all
 

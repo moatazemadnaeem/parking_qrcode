@@ -98,12 +98,25 @@ module.exports={
         //check first is the session object exist and then check jwt
         if(req.currentUser){
           try{
-            const {name,email,_id}= await user.findById(req.currentUser.id)
+            const {name,email,_id,imgPath}= await user.findById(req.currentUser.id)
+            let L=imgPath.length-1;
+            if(L<0){
+                return res.send({
+                    name,
+                    email,
+                    id:_id,
+                    status:true,
+                    images:imgPath,
+                    lastImg:'there is no last image'
+                })
+            }
             return res.send({
                 name,
                 email,
                 id:_id,
-                status:true
+                status:true,
+                images:imgPath,
+                lastImg:imgPath[L]
             })
           }catch(err){
             throw new notfound('this user can not be found')

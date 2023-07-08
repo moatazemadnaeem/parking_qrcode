@@ -1,17 +1,19 @@
 const {parking}=require('../models/ParkingModel')
 const {BadReqErr}=require('../errorclasses/badReq')
 const {GetRandString}=require('../utils/randomString')
-const {InternalServerErr}=require('../errorclasses/InternalServer')
+// const {InternalServerErr}=require('../errorclasses/InternalServer')
 const {section}=require('../models/SectionsModel')
 const {distance}=require('../utils/getDistanceTwoPoints')
 const {car}=require('../models/CarsModel')
 const {user}=require('../models/BaseModel')
 const {nearestModel}=require('../models/NearestModel')
 const {bufferToDataURI}=require('../utils/turnBuffertoDataURI')
-const {uploadToCloudinary}=require('../utils/uploadImage')
+const {uploadVideosToCloudinary}=require('../utils/uploadImage')
+const axios = require('axios');
+
 module.exports={
     create_parking:async(req,res)=>{
-        const {name,desc,fullCapacity,location,floorCapacity,sortedNearest}=req.body;
+        const {name,desc,fullCapacity,location,floorCapacity,sortedNearest,userId}=req.body;
         try{
             let img=[];
             if(req.files){
@@ -33,7 +35,9 @@ module.exports={
                 location,
                 takenSections:[{sectionChar:'a',capacity:floorCapacity}],
                 loc,
-                nearest:sortedNearest
+                nearest:sortedNearest,
+                userId,
+                availableCapacity:fullCapacity
             })
             for(let i=0;i<sortedNearest.length;i++){
                 const data=sortedNearest[i];
@@ -62,7 +66,7 @@ module.exports={
             
             return res.status(201).send({msg:'Parking Created Successfully',Parking,status:true})
         }catch(err){
-            throw new InternalServerErr(err.message)
+            throw new BadReqErr(err.message)
         }
     },
     create_section:async(req,res)=>{
@@ -93,7 +97,7 @@ module.exports={
             return res.status(201).send({msg:'Section Created Successfully',Section,status:true})
 
         }catch(err){
-            throw new InternalServerErr(err.message)
+            throw new BadReqErr(err.message)
         }
         
     },
@@ -102,6 +106,9 @@ module.exports={
         const {carId,location,id,enterGate}=req.body;
         try{
             const Parking=await parking.findById(id)
+            if(Parking.availableCapacity===0){
+                throw new BadReqErr('Parking is full fill')
+            }
             const distanceGate=Parking.nearest.filter((item)=>item.gate===enterGate)
             const DGate=distanceGate[0].distanceToCenter;//100 M
             const ParkingLoc=Parking.location;
@@ -128,6 +135,7 @@ module.exports={
                 const c=Parking.takenSections[pos].capacity//get the object thats holds a and get the capacity
                 Parking.takenSections[pos]={...Parking.takenSections[pos],capacity:c-1}
                 console.log(c, Parking.takenSections[pos])
+                Parking.availableCapacity=Parking.availableCapacity - 1;
                 await Parking.save()
                 const Section=await section.findOne({sectionChar:aval[0].sectionChar,parkingId:Parking._id})
                 Section.capacity=c-1;
@@ -157,6 +165,7 @@ module.exports={
                 }
                 Parking.takenSections[0]={...Parking.takenSections[0],capacity:taken[0].capacity - 1}
                 console.log(Parking.takenSections[0])
+                Parking.availableCapacity=Parking.availableCapacity - 1;
                 await Parking.save();
                 const Section=await section.findOne({sectionChar:Parking.takenSections[0].sectionChar,parkingId:Parking._id})
                 Section.capacity = Section.capacity - 1;
@@ -179,7 +188,7 @@ module.exports={
             }
 
         }catch(err){
-            throw new InternalServerErr(err.message)
+            throw new BadReqErr(err.message)
         }
     },
     remove_cars:async(req,res)=>{
@@ -207,6 +216,7 @@ module.exports={
             const pos =  p.takenSections.map(e => e.sectionChar).indexOf(s);
             p.takenSections[pos]={...p.takenSections[pos],capacity:p.takenSections[pos].capacity+1}
             Section.capacity=Section.capacity + 1;
+            p.availableCapacity=p.availableCapacity + 1;
             await p.save()
             await Section.save()
 
@@ -218,35 +228,76 @@ module.exports={
             return res.status(200).send({msg:'Car Is removed Successfully from the parking',Car,status:true})
 
         }catch(err){
-            throw new InternalServerErr(err.message)
+            throw new BadReqErr(err.message)
         }
     },
-    get_nearest_parkings:async(req,res)=>{
-        const {location} =req.body;
-        if(!location||!location.lat||!location.lon){
-            throw new BadReqErr('Please provide the right creds.')
-        }
+    get_parkings:async(req,res)=>{
+        const {location,stars,userId,availableCapacity} =req.body;
         try{
-            const NearestParkings=await parking.find(
-                {
-                   "loc": {
-                     $near: {
-                       $geometry: {
-                          type: "Point" ,
-                          coordinates: [ location.lon , location.lat ]
-                       },
-                     }
-                   }
+            let query={}
+            if(location){
+                query['loc']={
+                    $near: {
+                        $geometry: {
+                          type: 'Point',
+                          coordinates: [location.lon, location.lat],
+                        },
+                    },
                 }
-                )
-                if(!NearestParkings||NearestParkings.length===0){
-                    throw new BadReqErr('There are no parkings')
-                }
-
-                return res.status(200).send({msg:'Fetched Nearest Parkings Successfully',NearestParkings,status:true})
             }
+            if (stars) {
+                query['ratings.avgRating'] = { $exists: true, $gte: stars };
+            }
+            if (userId) {
+                query['userId'] = { $eq: userId };
+            }
+            if (availableCapacity) {
+                query['availableCapacity'] = { $gte: availableCapacity };
+            }
+            const Parkings=await parking.find(query).select('-__v -createdAt -updatedAt -loc');
+            if(!Parkings){
+                throw new BadReqErr('There are no parkings')
+            }
+
+            return res.status(200).send({msg:'Fetched Parkings Successfully',Parkings,status:true})
+        }
         catch(err){
-            throw new InternalServerErr(err.message)
+            throw new BadReqErr(err.message)
+        }
+    },
+    rate_parkings:async(req,res)=>{
+        const { stars , parkingId } = req.body;
+        try{
+            const p=await parking.findById(parkingId)
+            if(!p){
+                throw new BadReqErr('can not find this parking')
+            }
+            // Check if user already rated
+            const alreadyRated = p.ratings.rateByUser.find(r => r.userId.toString() === req.currentUser.id);
+            if (alreadyRated) {
+               const newRatings= p.ratings.rateByUser.filter(r => r.userId.toString() !== req.currentUser.id)
+               newRatings.push({ userId: req.currentUser.id, stars })
+               p.ratings.rateByUser=newRatings;
+            }else{
+               p.ratings.rateByUser.push({ userId: req.currentUser.id, stars })
+            }
+            const c= p.ratings.rateByUser.length;
+            p.ratings.count=c;
+            const s=p.ratings.rateByUser.map(r => r.stars)
+            const avg=s.reduce((a, b) => a + b, 0)
+            p.ratings.avgRating= avg / c;
+            await p.save();
+            return res.status(200).send({ status: true ,msg:'Rate is done successfully'});
+        }catch(err){
+            throw new BadReqErr(err.message)
+        }
+    },
+    getParkingVideo:async(req,res)=>{
+        try{   
+            const video = 'https://res.cloudinary.com/dgn4qwa6m/video/upload/v1686941571/ai_g7gnql.mp4';
+            res.status(200).send({msg:'done sending video',video,status:true})
+        }catch(err){
+            throw new BadReqErr(err.message)
         }
     }
     
